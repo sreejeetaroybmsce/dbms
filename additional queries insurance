@@ -1,0 +1,6 @@
+select * from participate order by damage_amount desc;
+select avg(damage_amount) from participate;
+delete from participate where damage_amount<(select avg_damage from(select avg(damage_amount)as avg_damage from participate)as temp);
+rollback;
+select name from person,participate where person.driver_id=participate.driver_id and damage_amount>(select avg(damage_amount) from participate);
+select max(damage_amount) from participate;
