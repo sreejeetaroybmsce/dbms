@@ -1,0 +1,34 @@
+create database employee;
+use employee;
+create table dept(deptno int,dname varchar(20),dloc varchar(20),primary key(deptno));
+create table employee(empno int,ename varchar(30),mgr_no int,hiredate date,sal int,deptno int,primary key(empno),foreign key(deptno) references dept(deptno) on delete cascade on update cascade);
+create table incentives(empno int references employee(empno) on delete cascade on update cascade,incentive_date date,incentive_amont int,primary key(empno,incentive_date));
+create table project(pno int primary key,ploc varchar(20),pname varchar(20));
+create table assigned_to(empno int references incentives(empno),foreign key(empno) references employee(empno),pno int references project(pno),job_role varchar(20));
+insert into dept values(10,"accounting","mumbai"),
+(20,"research","bengaluru"),
+(30,"sales","delhi"),
+(40,"operations","chennai"),
+(50,"accounting","mumbai"),
+(60,"research","kolkata");
+desc dept;
+insert into employee values(7369,"adarsh",7902,"2010-1-06",10000,20),(1243,"shruthi",1233,"2013-10-19",30000,30),(1222,"rohan",1345,"2012-11-10",40000,40),(7897,"adil",6789,"2015-01-10",78000,50),(4567,"riya",1267,"2015-02-20",20000,60);
+insert into employee values(1267,"sonia",0989,"2010-2-10",20000,20);
+insert into incentives values(7369,"2016-11-10",1000),(1243,"2017-11-12",4000),(1222,"2018-7-19",3000),(7897,"2019-10-19",4000),(4567,"2019-12-10",7000);
+insert into project values(101,"mumbai","ai project"),(102,"delhi","iot"),(103,"kolkata","blockchain"),(104,"mumbai","data science"),(105,"chennai","autonomous_systems");
+insert into assigned_to values(7369,101,"manager"),(1243,102,"engineer"),(1222,103,"engineer"),(7897,104,"sales"),(4567,105,"engineer");
+select * from dept;
+select * from employee;
+select * from assigned_to;
+select * from incentives;
+select * from project;
+use employee;
+select empno from employee where empno not in(select empno from incentives);
+select e.empno from employee e,assigned_to a,project p where e.empno=a.empno and a.pno=p.pno and p.ploc in ('Bengaluru','Hyderabad','Mysuru');
+select employee.empno,employee.ename,dept.dname,assigned_to.job_role,dept.dloc,project.ploc from employee,dept,assigned_to,project where employee.empno=assigned_to.empno and employee.deptno=dept.deptno and project.pno=assigned_to.pno and project.ploc=dept.dloc;
+select employee.ename,count(*) from employee where employee.mgr_no=employee.empno group by ename having count(*)=(select max(mycount) from (select count(*) mycount from employee group by mgr_no)a);
+select * from employee where employee.empno in (select mgr_no from employee) and employee.sal>(select avg(employee.sal) from employee where employee.empno=employee.mgr_no);
+select distinct m.mgr_no from employee e,employee m where e.mgr_no=m.mgr_no and e.deptno=m.deptno and e.empno in(select distinct m.mgr_no from employee e,employee m where e.mgr_no=m.mgr_no and e.deptno=m.deptno);
+select * from employee e,incentives i where e.empno=i.empno and 2=(select count(*) from incentives j where i.incentive_amont<=j.incentive_amont);
+select * from employee e where e.deptno=(select e1.deptno from employee e1 where e1.empno=e.mgr_no);
+select distinct e.ename from employee e,incentives i where(select max(sal+incentive_amont) from employee,incentives)>= any (select sal from employee e1 where e.deptno=e1.deptno);
